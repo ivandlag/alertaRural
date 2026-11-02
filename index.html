@@ -1,0 +1,541 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AlertaRural UNAD</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: barra lateral de navegación + área de trabajo; tarjetas solo para indicadores y paneles de decisión */
+:root{
+  --bg:#F3F6F2; --surface:#FFFFFF; --surface-2:#E9EFEA; --line:#D3DDD5;
+  --fg:#14231D; --muted:#5A6B63; --primary:#1E5B47; --primary-ink:#FFFFFF; --primary-soft:#DCEBE3;
+  --alto:#B9431A; --alto-soft:#FBE4DA; --medio:#9A6A0B; --medio-soft:#F8EDCF; --bajo:#2C7352; --bajo-soft:#DDF0E5;
+  --focus:#2F6FD6; --shadow:0 1px 2px rgba(20,35,29,.06),0 4px 14px rgba(20,35,29,.06);
+  --f-display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --f-body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --f-data:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1814; --surface:#16231D; --surface-2:#1D2D26; --line:#2C3F36;
+  --fg:#E6EFEA; --muted:#9DB0A6; --primary:#5FB894; --primary-ink:#0D1A14; --primary-soft:#1F3A2F;
+  --alto:#F08A63; --alto-soft:#3A2119; --medio:#E3B652; --medio-soft:#352B14; --bajo:#6CC99A; --bajo-soft:#173326;
+  --focus:#7FA9F0; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1814; --surface:#16231D; --surface-2:#1D2D26; --line:#2C3F36;
+  --fg:#E6EFEA; --muted:#9DB0A6; --primary:#5FB894; --primary-ink:#0D1A14; --primary-soft:#1F3A2F;
+  --alto:#F08A63; --alto-soft:#3A2119; --medio:#E3B652; --medio-soft:#352B14; --bajo:#6CC99A; --bajo-soft:#173326;
+  --focus:#7FA9F0; --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--f-body);margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.eyebrow{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+/* ---------- Login ---------- */
+#v-inicio{min-height:100%;display:grid;grid-template-columns:1.1fr 1fr}
+.login-art{background:var(--primary);color:var(--primary-ink);padding-block:48px;padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:32px;display:flex;flex-direction:column;justify-content:space-between;gap:32px;position:relative;overflow:hidden}
+.login-art canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.22}
+.login-art>*{position:relative}
+.login-art h1{font-size:clamp(2rem,4vw,3.2rem)}
+.login-art p{max-width:42ch;opacity:.92}
+.login-form{display:flex;align-items:center;justify-content:center;padding-block:40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.login-card{width:100%;max-width:400px;display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-weight:600;font-size:.9rem}
+.input,select.input,textarea.input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;width:100%}
+textarea.input{min-height:96px;resize:vertical}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.role{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;font-size:.85rem}
+.role[aria-pressed="true"]{border-color:var(--primary);background:var(--primary-soft);font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:8px;border:1px solid transparent;padding:10px 16px;font-weight:700;cursor:pointer;background:var(--surface-2);color:var(--fg)}
+.btn.primary{background:var(--primary);color:var(--primary-ink)}
+.btn.ghost{background:transparent;border-color:var(--line)}
+.btn.small{padding:6px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.notice{border:1px solid var(--line);border-left:4px solid var(--medio);background:var(--medio-soft);border-radius:8px;padding:10px 12px;font-size:.9rem}
+
+/* ---------- App shell ---------- */
+#app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.side{background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;padding-left:max(12px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:20px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:var(--primary);display:grid;place-items:center;color:var(--primary-ink);font-family:var(--f-display);font-weight:700}
+.brand b{font-family:var(--f-display);font-size:1.05rem;display:block;line-height:1.1}
+.brand small{color:var(--muted);font-size:.75rem}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--fg);text-decoration:none;font-weight:600;font-size:.95rem}
+.nav a:hover{background:var(--surface-2)}
+.nav a[aria-current="page"]{background:var(--primary-soft);color:var(--primary)}
+.nav svg{width:18px;height:18px;flex:none}
+.nav .count{margin-left:auto;font-family:var(--f-data);font-size:.75rem;background:var(--alto-soft);color:var(--alto);padding:1px 7px;border-radius:99px}
+.side-foot{margin-top:auto;font-size:.8rem;color:var(--muted);padding:0 8px;display:flex;flex-direction:column;gap:8px}
+.user{display:flex;gap:8px;align-items:center}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;font-weight:700;font-size:.8rem;color:var(--fg)}
+main{min-width:0;padding-block:24px 48px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+.page-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:18px}
+.page-head h1{font-size:1.8rem}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters select,.filters input{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:.9rem}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;box-shadow:var(--shadow);min-width:0}
+.panel h2{font-size:1.1rem;margin-bottom:4px}
+.grid-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;text-align:left;cursor:default}
+button.kpi{cursor:pointer}
+button.kpi:hover{border-color:var(--primary)}
+.kpi .v{font-family:var(--f-data);font-size:1.9rem;line-height:1.1}
+.kpi .d{font-size:.82rem;color:var(--muted)}
+.kpi.alto{border-top:4px solid var(--alto)}
+.grid-2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px;margin-bottom:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:99px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.pill.alto{background:var(--alto-soft);color:var(--alto)}
+.pill.medio{background:var(--medio-soft);color:var(--medio)}
+.pill.bajo{background:var(--bajo-soft);color:var(--bajo)}
+.tag{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.78rem;font-weight:600;background:var(--surface-2);color:var(--fg);white-space:nowrap}
+.tag.st-Contactado{background:#DCE7F7;color:#1F4E95}
+.tag.st-Acompañamiento{background:var(--primary-soft);color:var(--primary)}
+.tag.st-Descartada{background:var(--surface-2);color:var(--muted);text-decoration:line-through}
+.tag.st-Cerrado{background:var(--bajo-soft);color:var(--bajo)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .tag.st-Contactado{background:#1C2C45;color:#9CC0F5}}
+:root[data-theme="dark"] .tag.st-Contactado{background:#1C2C45;color:#9CC0F5}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+th{text-align:left;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th button{all:unset;cursor:pointer}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+.score{display:flex;align-items:center;gap:8px}
+.score .bar{width:64px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.score .bar i{display:block;height:100%}
+.chart text{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.chart .lbl{fill:var(--fg);font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.case-head{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.case-meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;color:var(--muted)}
+.case-meta b{color:var(--fg)}
+.factor{display:grid;grid-template-columns:1fr 120px 44px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line)}
+.factor:last-child{border-bottom:0}
+.factor .fb{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.factor .fb i{display:block;height:100%;background:var(--alto)}
+.actions-list{display:flex;flex-direction:column;gap:8px;margin:8px 0 0;padding:0;list-style:none}
+.actions-list li{display:flex;gap:10px;align-items:flex-start;padding:10px;border-radius:8px;background:var(--surface-2);font-size:.92rem}
+.timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;font-size:.9rem}
+.timeline li{border-left:2px solid var(--line);padding-left:12px}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(220px,1fr));gap:12px;overflow-x:auto}
+.col{background:var(--surface-2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:200px}
+.col h3{font-size:.95rem;display:flex;justify-content:space-between}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:.88rem;cursor:pointer}
+.card:hover{border-color:var(--primary)}
+.qual{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.meter{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--primary)}
+.range-row{display:grid;grid-template-columns:140px 1fr 56px;gap:12px;align-items:center;margin:10px 0}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--fg);padding:0;width:min(560px,calc(100% - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,20,15,.45)}
+.dlg-body{padding:20px;display:flex;flex-direction:column;gap:14px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 20px;border-top:1px solid var(--line)}
+.opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.opt{border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;display:flex;flex-direction:column;gap:2px;font-size:.88rem;background:var(--surface)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt:has(input:checked){border-color:var(--primary);background:var(--primary-soft)}
+.opt b{font-size:.95rem}
+.err{color:var(--alto);font-size:.85rem}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;font-size:.92rem;z-index:50}
+.test-fab{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:40}
+.test-panel{position:fixed;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100% - 36px));z-index:40;display:flex;flex-direction:column;gap:10px}
+.task{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:8px;background:var(--surface-2);font-size:.88rem}
+.task-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.help-levels{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mobile-top{display:none}
+@media (max-width:900px){
+  #v-inicio{grid-template-columns:1fr}
+  .login-art{padding-right:max(16px,env(safe-area-inset-right,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-block:28px}
+  #app{grid-template-columns:minmax(0,1fr)}
+  .side{min-width:0}
+  .side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px))}
+  .nav{flex-direction:row;overflow-x:auto}
+  .nav a{white-space:nowrap}
+  .side-foot{display:none}
+  main{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .grid-kpi,.qual{grid-template-columns:repeat(2,1fr)}
+  .grid-2,.grid-3,.help-levels{grid-template-columns:1fr}
+  .opts{grid-template-columns:1fr}
+  .factor{grid-template-columns:1fr 70px 40px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<!-- ================= INICIO DE SESIÓN ================= -->
+<section id="v-inicio" hidden>
+  <div class="login-art">
+    <canvas id="topo" aria-hidden="true"></canvas>
+    <div class="eyebrow" style="color:inherit;opacity:.8">Prototipo académico · Proyecto de Ingeniería II</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <h1>AlertaRural UNAD</h1>
+      <p>Señales tempranas para acompañar a tiempo a los estudiantes de zonas rurales o con conectividad limitada. La alerta orienta una conversación; la decisión siempre es de una persona.</p>
+    </div>
+    <p style="font-size:.85rem;opacity:.8">Todos los datos de este prototipo son sintéticos. Ningún código corresponde a un estudiante real.</p>
+  </div>
+  <div class="login-form">
+    <form class="login-card" id="login" novalidate>
+      <div><h2 style="font-size:1.6rem">Ingresar</h2><p class="muted" style="margin:.3rem 0 0">Usa tu cuenta institucional de prueba.</p></div>
+      <div class="field"><label for="l-user">Usuario</label><input class="input" id="l-user" value="consejero.pasto@prueba.unad" autocomplete="off"></div>
+      <div class="field"><label for="l-pass">Contraseña</label><input class="input" id="l-pass" type="password" value="prototipo" autocomplete="off"></div>
+      <div class="field"><span style="font-weight:600;font-size:.9rem">Rol</span>
+        <div class="roles" role="group" aria-label="Rol">
+          <button type="button" class="role" data-role="Consejero" aria-pressed="true">Consejero</button>
+          <button type="button" class="role" data-role="Coordinador" aria-pressed="false">Coordinador</button>
+          <button type="button" class="role" data-role="Analista" aria-pressed="false">Analista</button>
+        </div>
+      </div>
+      <div class="notice">Al ingresar aceptas el uso responsable: las alertas son señales de apoyo, no sanciones ni decisiones automáticas.</div>
+      <button class="btn primary" type="submit">Ingresar al tablero</button>
+    </form>
+  </div>
+</section>
+
+<!-- ================= APLICACIÓN ================= -->
+<div id="app" hidden>
+  <aside class="side">
+    <div class="brand"><div class="brand-mark">AR</div><div><b>AlertaRural</b><small>Permanencia UNAD</small></div></div>
+    <nav class="nav" aria-label="Principal">
+      <a href="#tablero" data-nav="tablero"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Tablero</a>
+      <a href="#casos" data-nav="casos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17v.5"/></svg>Alertas<span class="count num" id="nav-count">0</span></a>
+      <a href="#seguimiento" data-nav="seguimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="5" height="16" rx="1.5"/><rect x="10" y="4" width="5" height="11" rx="1.5"/><rect x="17" y="4" width="4" height="7" rx="1.5"/></svg>Seguimiento</a>
+      <a href="#datos" data-nav="datos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>Datos y modelo</a>
+      <a href="#ayuda" data-nav="ayuda"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17v.5"/></svg>Ayuda</a>
+    </nav>
+    <div class="side-foot">
+      <div class="user"><div class="avatar" id="u-ini">CP</div><div><div style="color:var(--fg);font-weight:600" id="u-name">Consejero</div><div id="u-role">CEAD Pasto</div></div></div>
+      <button class="btn ghost small" id="logout" type="button">Cerrar sesión</button>
+      <span>Datos sintéticos · Modelo v1.2</span>
+    </div>
+  </aside>
+  <main id="main"></main>
+</div>
+
+<dialog id="dlg-review">
+  <form id="f-review" method="dialog" novalidate>
+    <div class="dlg-body">
+      <div><div class="eyebrow">Revisión humana</div><h2 style="font-size:1.3rem" id="rv-title">Registrar decisión</h2></div>
+      <fieldset style="border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px">
+        <legend style="font-weight:600;font-size:.9rem;margin-bottom:6px">¿Qué decidiste sobre esta alerta?</legend>
+        <div class="opts">
+          <label class="opt"><input type="radio" name="dec" value="Contactado"><b>Contactar</b><span class="muted">Llamada o mensaje al estudiante</span></label>
+          <label class="opt"><input type="radio" name="dec" value="Acompañamiento"><b>Acompañar</b><span class="muted">Plan de seguimiento</span></label>
+          <label class="opt"><input type="radio" name="dec" value="Descartada"><b>Descartar</b><span class="muted">La alerta no aplica</span></label>
+        </div>
+      </fieldset>
+      <div class="field" id="rv-motivo-wrap" hidden><label for="rv-motivo">Motivo del descarte</label>
+        <select class="input" id="rv-motivo"><option value="">Selecciona un motivo</option><option>Falso positivo: el estudiante está activo</option><option>Ya recibe acompañamiento</option><option>Otro motivo (explicar en la nota)</option></select></div>
+      <div class="field"><label for="rv-nota">Nota de la revisión</label>
+        <textarea class="input" id="rv-nota" placeholder="Ej.: Se contactó por WhatsApp; reporta fallas de internet en la vereda. Se ofrece préstamo de módem y tutoría sincrónica."></textarea>
+        <span class="muted" style="font-size:.8rem"><span id="rv-len" class="num">0</span>/20 caracteres mínimos</span></div>
+      <div class="err" id="rv-err" hidden></div>
+    </div>
+    <div class="dlg-foot"><button class="btn ghost" type="button" id="rv-cancel">Cancelar</button><button class="btn primary" type="submit" id="rv-save">Guardar revisión</button></div>
+  </form>
+</dialog>
+
+<button class="btn primary test-fab" id="test-fab" type="button" hidden>Modo prueba</button>
+<div class="panel test-panel" id="test-panel" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:1.05rem">Prueba de usabilidad</h2><button class="btn ghost small" id="test-close" type="button">Cerrar</button></div>
+  <p class="muted" style="margin:0;font-size:.85rem">Tareas guiadas (HU-12). El cronómetro empieza al pulsar Iniciar.</p>
+  <div id="tasks"></div>
+  <div class="field"><label for="fb-text" style="font-size:.85rem">Realimentación del participante</label><textarea class="input" id="fb-text" style="min-height:64px" placeholder="¿Qué fue confuso? ¿Qué faltó?"></textarea></div>
+  <button class="btn small" id="fb-save" type="button">Guardar realimentación</button>
+  <div id="fb-list" style="font-size:.82rem;display:flex;flex-direction:column;gap:6px;max-height:140px;overflow:auto"></div>
+</div>
+<div id="toast" role="status" hidden></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------------- Utilidades ---------------- */
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store={get(k,d){try{const v=localStorage.getItem("ar_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("ar_"+k,JSON.stringify(v))}catch(e){}}};
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2600)}
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+/* ---------------- Datos sintéticos (semilla fija) ---------------- */
+const CEADS=["Pasto","Duitama","Florencia","Valledupar","Ibagué","Acacías"];
+const PROGS=["Ingeniería de Sistemas","Agronomía","Zootecnia","Psicología","Administración de Empresas","Lic. en Pedagogía Infantil"];
+const R=rng(20261102);
+const pick=a=>a[Math.floor(R()*a.length)];
+const cfg=Object.assign({alto:.70,medio:.40},store.get("cfg",{}));
+const STUDENTS=[];
+for(let i=1;i<=1248;i++){
+  const rural=R()<.62, cead=pick(CEADS), prog=pick(PROGS);
+  const con=rural?(R()<.48?"Baja":R()<.6?"Media":"Alta"):(R()<.12?"Baja":R()<.4?"Media":"Alta");
+  const risk0=(con==="Baja"?.9:con==="Media"?.35:0)+(rural?.25:0)+(R()<.3?.5:0)-.6+R()*.8;
+  const dias=Math.max(0,Math.round(risk0*9+R()*6-2));
+  const entregas=Math.max(5,Math.min(100,Math.round(92-risk0*38-R()*18)));
+  const nota=Math.max(1,Math.min(5,+(4.1-risk0*1.1-R()*.8+.3).toFixed(1)));
+  const trabaja=R()<.55+(rural?.15:0), primer=R()<.28;
+  const weeks=[];let base=Math.max(.3,6-risk0*3+R()*2);
+  for(let w=0;w<8;w++){base=Math.max(0,base+(R()-.55)*1.6-(risk0>.8&&w>3?.6:0));weeks.push(Math.round(base))}
+  const z=-4.4+dias*.16+(100-entregas)*.03+(3.5-nota)*.55+(con==="Baja"?.9:con==="Media"?.3:0)+(trabaja?.25:0)+(primer?.35:0);
+  const score=1/(1+Math.exp(-z));
+  const contrib=[
+    ["dias",dias*.16,`No ingresa al aula hace ${dias} días`],
+    ["entregas",(100-entregas)*.03,`Ha entregado el ${entregas} % de las actividades`],
+    ["nota",Math.max(0,(3.5-nota)*.55),`Promedio parcial de ${nota.toFixed(1)} sobre 5,0`],
+    ["con",con==="Baja"?.9:con==="Media"?.3:0,`Conectividad ${con.toLowerCase()} en su zona`],
+    ["trabaja",trabaja?.25:0,"Estudia y trabaja simultáneamente"],
+    ["primer",primer?.35:0,"Cursa primer periodo académico"]
+  ].filter(c=>c[1]>0.05).sort((a,b)=>b[1]-a[1]);
+  STUDENTS.push({id:"EST-"+String(i).padStart(4,"0"),cead,prog,zona:rural?"Rural":"Urbana",con,dias,entregas,nota,trabaja,primer,weeks,score,contrib});
+}
+const level=s=>s.score>=cfg.alto?"alto":s.score>=cfg.medio?"medio":"bajo";
+const LV={alto:"Alto",medio:"Medio",bajo:"Bajo"};
+/* Revisiones: semilla de ejemplo + lo que registre el usuario */
+let reviews=store.get("reviews",null);
+if(!reviews){reviews={};const R2=rng(7);const alt=STUDENTS.filter(s=>s.score>=.7).sort((a,b)=>b.score-a.score);
+  alt.slice(0,40).forEach((s,k)=>{const r=R2();const st=r<.35?"Contactado":r<.65?"Acompañamiento":r<.8?"Cerrado":"Descartada";
+    reviews[s.id]=[{st,fecha:`2026-10-${String(20+Math.floor(R2()*12)).padStart(2,"0")}`,quien:pick(["L. Rosero","M. Pinto","C. Ortiz"]),nota:st==="Descartada"?"Falso positivo: entrega activa en el foro colaborativo.":"Contacto telefónico; se acuerda plan de entregas y tutoría sincrónica."}]});
+  store.set("reviews",reviews)}
+const statusOf=s=>(reviews[s.id]&&reviews[s.id].length)?reviews[s.id][reviews[s.id].length-1].st:"Sin revisar";
+
+/* ---------------- Estado de la interfaz ---------------- */
+const ui=Object.assign({periodo:"2026-2",cead:"Todos",con:"Todas",nivel:"Todos",estado:"Todos",q:"",sort:"score",dir:-1},store.get("ui",{}));
+let user=store.get("user",null);
+function saveUi(){store.set("ui",{periodo:ui.periodo,cead:ui.cead,con:ui.con})}
+function filtered(){return STUDENTS.filter(s=>(ui.cead==="Todos"||s.cead===ui.cead)&&(ui.con==="Todas"||s.con===ui.con))}
+
+/* ---------------- Gráficos SVG ---------------- */
+const COL={alto:"var(--alto)",medio:"var(--medio)",bajo:"var(--bajo)"};
+function barsByCead(list){
+  const W=520,H=230,P={l:84,r:16,t:10,b:28};const rows=CEADS.map(c=>{const g=list.filter(s=>s.cead===c);return{c,alto:g.filter(s=>level(s)==="alto").length,medio:g.filter(s=>level(s)==="medio").length,bajo:g.filter(s=>level(s)==="bajo").length,t:g.length}});
+  const max=Math.max(1,...rows.map(r=>r.t));const step=Math.ceil(max/4/10)*10||10;const top=step*4;const bw=(H-P.t-P.b)/rows.length;
+  const x=v=>P.l+(W-P.l-P.r)*v/top;let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Alertas por centro">`;
+  for(let k=0;k<=4;k++){const xv=x(step*k);s+=`<line x1="${xv}" x2="${xv}" y1="${P.t}" y2="${H-P.b}" stroke="var(--line)"/><text x="${xv}" y="${H-8}" text-anchor="middle">${step*k}</text>`}
+  rows.forEach((r,i)=>{const y=P.t+i*bw+bw*.2,h=bw*.6;let cx=x(0);
+    s+=`<text class="lbl" x="${P.l-8}" y="${y+h/2+4}" text-anchor="end">${r.c}</text>`;
+    ["alto","medio","bajo"].forEach(l=>{const w=x(r[l])-x(0);if(w>0){s+=`<rect x="${cx}" y="${y}" width="${w}" height="${h}" fill="${COL[l]}" rx="2"><title>${r.c} · ${LV[l]}: ${r[l]}</title></rect>`;cx+=w}})});
+  return s+"</svg>"}
+function trendLine(list){
+  const W=520,H=230,P={l:36,r:20,t:14,b:28};const wk=["S1","S2","S3","S4","S5","S6","S7","S8"];
+  const vals=wk.map((_,w)=>list.filter(s=>{const a=s.weeks[w];return a<=1}).length);
+  const top=Math.max(10,Math.ceil(Math.max(...vals)/20)*20);const x=i=>P.l+(W-P.l-P.r)*i/7,y=v=>H-P.b-(H-P.t-P.b)*v/top;
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Tendencia semanal">`;
+  for(let k=0;k<=4;k++){const v=top*k/4;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${P.l-6}" y="${y(v)+4}" text-anchor="end">${v}</text>`}
+  wk.forEach((w,i)=>s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${w}</text>`);
+  const pts=vals.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+  s+=`<polygon points="${x(0)},${y(0)} ${pts} ${x(7)},${y(0)}" fill="var(--alto)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--alto)" stroke-width="2.5"/>`;
+  s+=`<circle cx="${x(7)}" cy="${y(vals[7])}" r="5" fill="var(--alto)"/><text class="lbl" x="${x(7)-8}" y="${y(vals[7])-10}" text-anchor="end">${vals[7]} estudiantes</text>`;
+  return s+"</svg>"}
+function weeksChart(s){
+  const W=420,H=150,P={l:26,r:10,t:10,b:24};const top=Math.max(4,Math.max(...s.weeks)+1);const bw=(W-P.l-P.r)/8;
+  let o=`<svg class="chart" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Ingresos semanales al aula">`;
+  [0,top/2,top].forEach(v=>{const yy=H-P.b-(H-P.t-P.b)*v/top;o+=`<line x1="${P.l}" x2="${W-P.r}" y1="${yy}" y2="${yy}" stroke="var(--line)"/><text x="${P.l-4}" y="${yy+4}" text-anchor="end">${Math.round(v)}</text>`});
+  s.weeks.forEach((v,i)=>{const h=(H-P.t-P.b)*v/top;o+=`<rect x="${P.l+i*bw+bw*.18}" y="${H-P.b-h}" width="${bw*.64}" height="${Math.max(h,1)}" rx="2" fill="${v<=1?"var(--alto)":"var(--primary)"}"><title>Semana ${i+1}: ${v} ingresos</title></rect><text x="${P.l+i*bw+bw/2}" y="${H-7}" text-anchor="middle">S${i+1}</text>`});
+  return o+"</svg>"}
+
+/* ---------------- Vistas ---------------- */
+function filtersBar(extra=""){
+  const opt=(arr,v)=>arr.map(a=>`<option${a===v?" selected":""}>${a}</option>`).join("");
+  return `<div class="filters"><label class="muted" for="f-per" style="font-size:.85rem">Filtros</label>
+  <select id="f-per" aria-label="Periodo">${opt(["2026-2","2026-1"],ui.periodo)}</select>
+  <select id="f-cead" aria-label="Centro">${opt(["Todos",...CEADS],ui.cead)}</select>
+  <select id="f-con" aria-label="Conectividad">${opt(["Todas","Baja","Media","Alta"],ui.con)}</select>${extra}</div>`}
+function bindFilters(rerender){
+  [["#f-per","periodo"],["#f-cead","cead"],["#f-con","con"]].forEach(([id,k])=>{const el=$(id);if(el)el.onchange=()=>{ui[k]=el.value;saveUi();rerender()}})}
+
+function vTablero(){
+  const L=filtered();const n={alto:0,medio:0,bajo:0};L.forEach(s=>n[level(s)]++);
+  const rev=L.filter(s=>["Contactado","Acompañamiento"].includes(statusOf(s))).length, cer=L.filter(s=>statusOf(s)==="Cerrado").length;
+  const sin=L.filter(s=>level(s)==="alto"&&statusOf(s)==="Sin revisar").length;
+  $("#main").innerHTML=`
+  <div class="page-head"><div><div class="eyebrow">Periodo ${ui.periodo} · ${ui.cead==="Todos"?"Todos los centros":"CEAD "+ui.cead}</div><h1>Estado de la permanencia</h1></div>${filtersBar()}</div>
+  <div class="notice" style="margin-bottom:16px">Las alertas son señales para priorizar el acompañamiento. Cada caso requiere revisión humana antes de cualquier acción.</div>
+  <div class="grid-kpi">
+    <div class="kpi"><span class="eyebrow">Monitoreados</span><span class="v">${L.length.toLocaleString("es-CO")}</span><span class="d">${L.filter(s=>s.zona==="Rural").length.toLocaleString("es-CO")} en zona rural</span></div>
+    <button class="kpi alto" data-go="alto" type="button"><span class="eyebrow">Alertas altas</span><span class="v" style="color:var(--alto)">${n.alto}</span><span class="d"><b class="num">${sin}</b> sin revisar · ver lista →</span></button>
+    <button class="kpi" data-go="rev" type="button"><span class="eyebrow">En revisión</span><span class="v">${rev}</span><span class="d">Contactados o en acompañamiento</span></button>
+    <div class="kpi"><span class="eyebrow">Casos cerrados</span><span class="v">${cer}</span><span class="d">El estudiante retomó sus actividades</span></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel"><h2>Alertas por centro</h2><p class="muted" style="margin:0 0 8px;font-size:.88rem">Estudiantes por nivel de alerta en cada CEAD</p>${barsByCead(L)}
+      <div class="legend"><span><i style="background:var(--alto)"></i>Alto ${n.alto}</span><span><i style="background:var(--medio)"></i>Medio ${n.medio}</span><span><i style="background:var(--bajo)"></i>Bajo ${n.bajo}</span></div></div>
+    <div class="panel"><h2>Estudiantes sin actividad</h2><p class="muted" style="margin:0 0 8px;font-size:.88rem">Con 0 o 1 ingreso al aula por semana, últimas 8 semanas</p>${trendLine(L)}</div>
+  </div>
+  <div class="grid-3">
+    ${["alto","medio","bajo"].map(l=>`<button class="panel kpi" data-go="${l}" type="button" style="box-shadow:none"><span class="pill ${l}">${LV[l]}</span><span class="v">${L.length?Math.round(n[l]/L.length*100):0} %</span><span class="d">${l==="alto"?"Puntaje ≥ "+cfg.alto.toFixed(2)+": contactar esta semana":l==="medio"?"Puntaje "+cfg.medio.toFixed(2)+"–"+(cfg.alto-.01).toFixed(2)+": seguimiento preventivo":"Puntaje < "+cfg.medio.toFixed(2)+": sin acción"}</span></button>`).join("")}
+  </div>`;
+  bindFilters(vTablero);
+  $$("[data-go]").forEach(b=>b.onclick=()=>{const g=b.dataset.go;if(g==="rev"){ui.nivel="Todos";ui.estado="Acompañamiento"}else{ui.nivel=LV[g];ui.estado="Todos"}location.hash="casos"});
+}
+
+function vCasos(){
+  const opt=(arr,v)=>arr.map(a=>`<option${a===v?" selected":""}>${a}</option>`).join("");
+  const extra=`<select id="f-niv" aria-label="Nivel">${opt(["Todos","Alto","Medio","Bajo"],ui.nivel)}</select>
+  <select id="f-est" aria-label="Estado">${opt(["Todos","Sin revisar","Contactado","Acompañamiento","Descartada","Cerrado"],ui.estado)}</select>
+  <input id="f-q" type="search" placeholder="Buscar EST-0000" value="${esc(ui.q)}" aria-label="Buscar código">`;
+  let L=filtered().filter(s=>(ui.nivel==="Todos"||LV[level(s)]===ui.nivel)&&(ui.estado==="Todos"||statusOf(s)===ui.estado)&&(!ui.q||s.id.toLowerCase().includes(ui.q.toLowerCase())));
+  if(ui.nivel==="Todos"&&ui.estado==="Todos"&&!ui.q)L=L.filter(s=>level(s)!=="bajo");
+  const k=ui.sort;L.sort((a,b)=>(k==="dias"?a.dias-b.dias:k==="id"?a.id.localeCompare(b.id):a.score-b.score)*ui.dir);
+  const shown=L.slice(0,60);
+  $("#main").innerHTML=`
+  <div class="page-head"><div><div class="eyebrow">${L.length} casos · ordenados por ${k==="dias"?"días sin ingreso":k==="id"?"código":"puntaje"}</div><h1>Alertas para revisar</h1></div></div>
+  <div class="panel" style="padding:12px 12px 4px">${filtersBar(extra)}
+  <div class="table-wrap" style="margin-top:10px"><table><thead><tr>
+    <th><button data-sort="id" type="button">Estudiante</button></th><th>Nivel</th><th><button data-sort="score" type="button">Puntaje ↕</button></th><th>Principales factores</th><th><button data-sort="dias" type="button">Días sin ingreso ↕</button></th><th>CEAD</th><th>Estado</th></tr></thead>
+  <tbody>${shown.map(s=>`<tr data-id="${s.id}" tabindex="0"><td><b class="num">${s.id}</b><div class="muted" style="font-size:.8rem">${esc(s.prog)}</div></td>
+    <td><span class="pill ${level(s)}">${LV[level(s)]}</span></td>
+    <td><div class="score"><span class="num">${s.score.toFixed(2)}</span><span class="bar"><i style="width:${s.score*100}%;background:${COL[level(s)]}"></i></span></div></td>
+    <td style="min-width:220px;font-size:.86rem">${s.contrib.slice(0,2).map(c=>esc(c[2])).join("<br>")}</td>
+    <td class="num">${s.dias}</td><td>${s.cead}</td><td><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></td></tr>`).join("")||`<tr><td colspan="7" class="muted" style="text-align:center;padding:28px">No hay casos con esos filtros. Prueba con otro nivel o centro.</td></tr>`}</tbody></table></div>
+  ${L.length>60?`<p class="muted" style="font-size:.85rem;padding:0 6px">Se muestran los primeros 60 de ${L.length}. Usa los filtros para acotar.</p>`:""}</div>`;
+  bindFilters(vCasos);
+  $("#f-niv").onchange=e=>{ui.nivel=e.target.value;vCasos()};$("#f-est").onchange=e=>{ui.estado=e.target.value;vCasos()};
+  $("#f-q").oninput=e=>{ui.q=e.target.value;clearTimeout(vCasos._t);vCasos._t=setTimeout(()=>{vCasos();const q=$("#f-q");q.focus();q.setSelectionRange(q.value.length,q.value.length)},250)};
+  $$("[data-sort]").forEach(b=>b.onclick=()=>{if(ui.sort===b.dataset.sort)ui.dir*=-1;else{ui.sort=b.dataset.sort;ui.dir=b.dataset.sort==="id"?1:-1}vCasos()});
+  $$("tbody tr[data-id]").forEach(tr=>{const go=()=>location.hash="caso-"+tr.dataset.id.toLowerCase();tr.onclick=go;tr.onkeydown=e=>{if(e.key==="Enter")go()}});
+}
+
+const ACCIONES={dias:"Llamar o escribir por WhatsApp para conocer por qué no ha ingresado y ofrecer apoyo inmediato.",entregas:"Acordar con el tutor un plan de entregas con fechas ajustadas.",nota:"Remitir a tutoría sincrónica o monitoría del curso con menor desempeño.",con:"Informar sobre préstamo de módem, salas de conectividad del CEAD y material descargable para estudiar sin conexión.",trabaja:"Revisar la carga académica y sugerir cursos en horario flexible.",primer:"Vincular al programa de inducción y acompañamiento de primer periodo."};
+function vCaso(id){
+  const s=STUDENTS.find(x=>x.id.toLowerCase()===id);if(!s){location.hash="casos";return}
+  const l=level(s),hist=reviews[s.id]||[],max=s.contrib[0]?s.contrib[0][1]:1;
+  $("#main").innerHTML=`
+  <a href="#casos" class="muted" style="text-decoration:none;font-weight:600">← Volver a alertas</a>
+  <div class="case-head" style="margin-top:10px"><div style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h1 class="num" style="font-size:1.8rem">${s.id}</h1><span class="pill ${l}">Alerta ${LV[l].toLowerCase()}</span><span class="tag st-${statusOf(s)}">${statusOf(s)}</span></div>
+    <div class="case-meta"><span>Programa <b>${esc(s.prog)}</b></span><span>CEAD <b>${s.cead}</b></span><span>Zona <b>${s.zona}</b></span><span>Conectividad <b>${s.con}</b></span>${s.primer?"<span><b>Primer periodo</b></span>":""}</div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" id="btn-review" type="button">Registrar revisión</button></div></div>
+  <div class="notice" style="margin-bottom:16px">Este puntaje es una estimación del modelo con datos sintéticos. Úsalo para preparar la conversación, no para concluir sobre el estudiante.</div>
+  <div class="grid-2">
+    <div class="panel"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap"><h2>¿Por qué tiene esta alerta?</h2><span class="muted">Puntaje <b class="num" style="color:var(--fg)">${s.score.toFixed(2)}</b></span></div>
+      <p class="muted" style="margin:0 0 8px;font-size:.88rem">Factores que más aumentan el puntaje, de mayor a menor peso</p>
+      ${s.contrib.slice(0,4).map(c=>`<div class="factor"><span>${esc(c[2])}</span><span class="fb"><i style="width:${Math.round(c[1]/max*100)}%"></i></span><span class="num muted" style="text-align:right">+${c[1].toFixed(2)}</span></div>`).join("")||'<p class="muted">Sin factores relevantes.</p>'}</div>
+    <div class="panel"><h2>Ingresos al aula por semana</h2><p class="muted" style="margin:0 0 8px;font-size:.88rem">Últimas 8 semanas · en rojo, semanas con 0 o 1 ingreso</p>${weeksChart(s)}
+      <div class="case-meta" style="margin-top:6px"><span>Actividades entregadas <b class="num">${s.entregas} %</b></span><span>Promedio parcial <b class="num">${s.nota.toFixed(1)}</b></span></div></div>
+  </div>
+  <div class="grid-2">
+    <div class="panel"><h2>Acciones sugeridas</h2><p class="muted" style="margin:0;font-size:.88rem">Basadas en los factores del caso. Elige las que apliquen tras hablar con el estudiante.</p>
+      <ul class="actions-list">${s.contrib.slice(0,3).map(c=>`<li><span aria-hidden="true">•</span><span>${ACCIONES[c[0]]}</span></li>`).join("")}</ul></div>
+    <div class="panel"><h2>Historial de revisión</h2>${hist.length?`<ul class="timeline" style="margin-top:8px">${hist.slice().reverse().map(h=>`<li><div><span class="tag st-${h.st}">${h.st}</span> <span class="muted num" style="font-size:.8rem">${h.fecha}</span> · <span class="muted">${esc(h.quien)}</span></div><div>${esc(h.nota)}</div></li>`).join("")}</ul>`:`<p class="muted">Nadie ha revisado este caso todavía. Registra la primera revisión cuando hables con el estudiante.</p>`}</div>
+  </div>`;
+  $("#btn-review").onclick=()=>openReview(s);
+}
+
+let reviewing=null;
+function openReview(s){reviewing=s;const f=$("#f-review");f.reset();$("#rv-title").textContent="Registrar decisión · "+s.id;$("#rv-motivo-wrap").hidden=true;$("#rv-err").hidden=true;$("#rv-len").textContent="0";$("#dlg-review").showModal()}
+$("#f-review").addEventListener("change",e=>{if(e.target.name==="dec")$("#rv-motivo-wrap").hidden=e.target.value!=="Descartada"});
+$("#rv-nota").addEventListener("input",e=>$("#rv-len").textContent=e.target.value.trim().length);
+$("#rv-cancel").onclick=()=>$("#dlg-review").close();
+$("#f-review").addEventListener("submit",e=>{
+  e.preventDefault();const dec=($("#f-review").querySelector("input[name=dec]:checked")||{}).value,nota=$("#rv-nota").value.trim(),mot=$("#rv-motivo").value;
+  const err=!dec?"Elige una decisión: contactar, acompañar o descartar.":nota.length<20?"Escribe una nota de al menos 20 caracteres que explique la decisión.":dec==="Descartada"&&!mot?"Indica el motivo por el que descartas la alerta.":"";
+  if(err){$("#rv-err").textContent=err;$("#rv-err").hidden=false;return}
+  const today=new Date().toISOString().slice(0,10);
+  (reviews[reviewing.id]=reviews[reviewing.id]||[]).push({st:dec,fecha:today,quien:user?user.name:"Consejero",nota:(mot?mot+". ":"")+nota});
+  store.set("reviews",reviews);$("#dlg-review").close();toast("Revisión guardada · "+reviewing.id+" pasó a "+dec);route();
+  testDone(3);
+});
+
+function vSeguimiento(){
+  const cols=[["Contactado","Contactado"],["Acompañamiento","En acompañamiento"],["Cerrado","Cerrado"],["Descartada","Descartada"]];
+  const L=filtered();
+  $("#main").innerHTML=`<div class="page-head"><div><div class="eyebrow">Casos con revisión humana registrada</div><h1>Seguimiento</h1></div>${filtersBar()}</div>
+  <div class="kanban">${cols.map(([k,t])=>{const cs=L.filter(s=>statusOf(s)===k);return `<section class="col"><h3><span>${t}</span><span class="num muted">${cs.length}</span></h3>
+  ${cs.slice(0,12).map(s=>{const h=reviews[s.id][reviews[s.id].length-1];return `<article class="card" data-id="${s.id}" tabindex="0"><div style="display:flex;justify-content:space-between;gap:6px"><b class="num">${s.id}</b><span class="pill ${level(s)}">${LV[level(s)]}</span></div><div class="muted">${esc(h.nota.slice(0,80))}${h.nota.length>80?"…":""}</div><div class="muted num" style="font-size:.78rem">${h.fecha} · ${esc(h.quien)}</div>
+  ${k!=="Cerrado"&&k!=="Descartada"?`<button class="btn small ghost" data-close="${s.id}" type="button">Marcar como cerrado</button>`:""}</article>`}).join("")||'<p class="muted" style="font-size:.85rem">Sin casos en este estado.</p>'}</section>`}).join("")}</div>`;
+  bindFilters(vSeguimiento);
+  $$(".card[data-id]").forEach(c=>c.onclick=e=>{if(e.target.dataset.close)return;location.hash="caso-"+c.dataset.id.toLowerCase()});
+  $$("[data-close]").forEach(b=>b.onclick=()=>{const id=b.dataset.close;reviews[id].push({st:"Cerrado",fecha:new Date().toISOString().slice(0,10),quien:user?user.name:"Consejero",nota:"El estudiante retomó sus actividades en el aula."});store.set("reviews",reviews);toast(id+" marcado como cerrado");vSeguimiento()});
+}
+
+function vDatos(){
+  const n=STUDENTS.length;const q=[["Completitud",98.6],["Valores válidos",99.2],["Duplicados",0],["Filas rechazadas",0.4]];
+  const rur=STUDENTS.filter(s=>s.zona==="Rural"),urb=STUDENTS.filter(s=>s.zona==="Urbana");
+  $("#main").innerHTML=`<div class="page-head"><div><div class="eyebrow">Última carga 2026-10-30 · ${n.toLocaleString("es-CO")} registros sintéticos</div><h1>Datos y modelo</h1></div></div>
+  <div class="grid-2">
+    <div class="panel"><h2>Calidad de la última carga</h2><p class="muted" style="margin:0 0 12px;font-size:.88rem">Las alertas solo se recalculan con completitud ≥ 95 %</p>
+      <div class="qual">${q.map(([t,v])=>`<div><div class="eyebrow">${t}</div><div class="num" style="font-size:1.4rem">${v} %</div><div class="meter"><i style="width:${t==="Duplicados"||t==="Filas rechazadas"?v*10:v}%;background:${t==="Filas rechazadas"&&v>0?"var(--medio)":"var(--primary)"}"></i></div></div>`).join("")}</div>
+      <div class="drop" style="margin-top:16px"><b>Cargar un nuevo archivo</b><span class="muted" style="font-size:.88rem">CSV con las columnas del diccionario de variables (código, CEAD, programa, ingresos, entregas, nota, conectividad)</span>
+      <input type="file" id="up" accept=".csv" aria-label="Archivo CSV"><span id="up-res" class="muted" style="font-size:.88rem"></span></div></div>
+    <div class="panel"><h2>Desempeño del modelo v1.2</h2><p class="muted" style="margin:0 0 12px;font-size:.88rem">Regresión logística · evaluada en un conjunto de prueba separado (20 %)</p>
+      <div class="qual" style="grid-template-columns:repeat(2,1fr)">${[["Recall (casos en riesgo)",.81],["Precisión",.64],["F1",.72],["AUC",.86]].map(([t,v])=>`<div><div class="eyebrow">${t}</div><div class="num" style="font-size:1.4rem">${v.toFixed(2)}</div></div>`).join("")}</div>
+      <h3 style="font-size:1rem;margin:16px 0 6px">Equidad por zona</h3>
+      <table><thead><tr><th>Zona</th><th>Estudiantes</th><th>Recall</th><th>Diferencia</th></tr></thead><tbody style="cursor:default">
+      <tr style="cursor:default"><td>Rural</td><td class="num">${rur.length}</td><td class="num">0.78</td><td rowspan="2"><span class="pill medio">7 pts</span><div class="muted" style="font-size:.8rem">Dentro del límite de 10 pts (IMP-03)</div></td></tr>
+      <tr style="cursor:default"><td>Urbana</td><td class="num">${urb.length}</td><td class="num">0.85</td></tr></tbody></table></div>
+  </div>
+  <div class="panel"><h2>Umbrales de los niveles de alerta</h2><p class="muted" style="margin:0;font-size:.88rem">Ajusta según la capacidad de atención del equipo. Solo el rol Coordinador puede guardar cambios.</p>
+    <div class="range-row"><label for="r-alto"><span class="pill alto">Alto</span> desde</label><input id="r-alto" type="range" min="0.5" max="0.9" step="0.01" value="${cfg.alto}"><span class="num" id="o-alto">${cfg.alto.toFixed(2)}</span></div>
+    <div class="range-row"><label for="r-medio"><span class="pill medio">Medio</span> desde</label><input id="r-medio" type="range" min="0.2" max="0.6" step="0.01" value="${cfg.medio}"><span class="num" id="o-medio">${cfg.medio.toFixed(2)}</span></div>
+    <p class="muted" style="font-size:.88rem" id="r-prev"></p>
+    <button class="btn primary" id="r-save" type="button" ${user&&user.role!=="Coordinador"?"disabled title='Solo el Coordinador puede guardar'":""}>Guardar umbrales</button>
+    ${user&&user.role!=="Coordinador"?`<span class="muted" style="font-size:.85rem;margin-left:8px">Ingresaste como ${user.role}: puedes simular pero no guardar.</span>`:""}</div>`;
+  const prev=()=>{const a=+$("#r-alto").value,m=+$("#r-medio").value;$("#o-alto").textContent=a.toFixed(2);$("#o-medio").textContent=m.toFixed(2);const c=STUDENTS.filter(s=>s.score>=a).length;$("#r-prev").textContent=`Con estos umbrales habría ${c} alertas altas (${(c/n*100).toFixed(1)} % de los monitoreados) y ${STUDENTS.filter(s=>s.score>=m&&s.score<a).length} medias.`};
+  $("#r-alto").oninput=prev;$("#r-medio").oninput=prev;prev();
+  $("#r-save").onclick=()=>{cfg.alto=+$("#r-alto").value;cfg.medio=Math.min(+$("#r-medio").value,cfg.alto-.05);store.set("cfg",cfg);toast("Umbrales guardados; las alertas se recalcularon");updateCount()};
+  $("#up").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{const lines=String(rd.result).split(/\r?\n/).filter(Boolean);const cols=(lines[0]||"").split(/[,;]/).map(c=>c.trim().toLowerCase());const need=["codigo","cead","ingresos","entregas"];const miss=need.filter(c=>!cols.includes(c));
+    $("#up-res").innerHTML=miss.length?`<span class="err">Faltan columnas obligatorias: ${miss.join(", ")}. Revisa el diccionario de variables.</span>`:`${lines.length-1} filas leídas. Validación simulada: completitud 97,8 %. Listo para recalcular.`};rd.readAsText(f)};
+}
+
+function vAyuda(){
+  $("#main").innerHTML=`<div class="page-head"><div><div class="eyebrow">Cómo leer AlertaRural</div><h1>Ayuda</h1></div></div>
+  <div class="help-levels" style="margin-bottom:16px">
+    <div class="panel"><span class="pill alto">Alto</span><p>Puntaje ≥ <b class="num">${cfg.alto.toFixed(2)}</b>. Contactar al estudiante esta semana y registrar la revisión.</p></div>
+    <div class="panel"><span class="pill medio">Medio</span><p>Puntaje entre <b class="num">${cfg.medio.toFixed(2)}</b> y <b class="num">${(cfg.alto-.01).toFixed(2)}</b>. Seguimiento preventivo: mensaje de apoyo y revisión en 15 días.</p></div>
+    <div class="panel"><span class="pill bajo">Bajo</span><p>Puntaje menor a <b class="num">${cfg.medio.toFixed(2)}</b>. No requiere acción; se sigue monitoreando.</p></div></div>
+  <div class="panel" style="max-width:75ch"><h2>Uso responsable</h2>
+    <ul style="margin:.5rem 0 0;padding-left:1.2rem;display:flex;flex-direction:column;gap:6px">
+      <li>La alerta es una <b>señal</b>, no una decisión. Ninguna alerta genera sanciones, bloqueos ni comunicaciones automáticas.</li>
+      <li>Toda alerta alta debe tener una <b>revisión humana</b> registrada con la decisión y una nota.</li>
+      <li>Los estudiantes se identifican con un <b>código seudónimo</b>. Los datos sensibles (etnia, discapacidad, ingresos) no hacen parte del modelo.</li>
+      <li>Si una alerta no aplica, descártala con su motivo: así el equipo puede mejorar el modelo.</li>
+    </ul></div>`;
+}
+
+/* ---------------- Modo prueba (usabilidad) ---------------- */
+const TASKS=[{t:"Encuentra cuántos estudiantes del CEAD Florencia tienen alerta alta."},{t:"Abre un caso de alerta alta y explica por qué tiene esa alerta."},{t:"Registra una revisión humana para ese caso."}];
+let tests=store.get("tests",TASKS.map(()=>({start:0,secs:null,ok:null})));
+function renderTasks(){$("#tasks").innerHTML=TASKS.map((k,i)=>{const t=tests[i];return `<div class="task"><b>Tarea ${i+1}.</b><span>${k.t}</span><div class="task-row">
+  ${t.secs!=null?`<span class="tag">${t.ok?"Completada":"No completada"} · <span class="num">${t.secs}</span> s</span>`:t.start?`<span class="muted">En curso…</span><button class="btn small" data-ok="${i}" type="button">Completada</button><button class="btn small ghost" data-ko="${i}" type="button">No pudo</button>`:`<button class="btn small" data-start="${i}" type="button">Iniciar</button>`}</div></div>`}).join("");
+  $$("[data-start]").forEach(b=>b.onclick=()=>{tests[+b.dataset.start]={start:Date.now(),secs:null,ok:null};store.set("tests",tests);renderTasks()});
+  $$("[data-ok],[data-ko]").forEach(b=>b.onclick=()=>{const i=+(b.dataset.ok??b.dataset.ko);tests[i].secs=Math.round((Date.now()-tests[i].start)/1000);tests[i].ok=b.dataset.ok!=null;store.set("tests",tests);renderTasks()});
+  const fb=store.get("fb",[]);$("#fb-list").innerHTML=fb.map(f=>`<div class="task" style="padding:6px 8px">${esc(f)}</div>`).join("")}
+function testDone(n){const t=tests[n-1];if(t&&t.start&&t.secs==null){t.secs=Math.round((Date.now()-t.start)/1000);t.ok=true;store.set("tests",tests);renderTasks()}}
+$("#test-fab").onclick=()=>{$("#test-panel").hidden=!$("#test-panel").hidden;renderTasks()};
+$("#test-close").onclick=()=>$("#test-panel").hidden=true;
+$("#fb-save").onclick=()=>{const v=$("#fb-text").value.trim();if(!v){toast("Escribe la realimentación antes de guardar");return}const fb=store.get("fb",[]);fb.unshift(v);store.set("fb",fb);$("#fb-text").value="";renderTasks();toast("Realimentación guardada")};
+
+/* ---------------- Sesión y rutas ---------------- */
+$$(".role").forEach(b=>b.onclick=()=>$$(".role").forEach(x=>x.setAttribute("aria-pressed",x===b)));
+$("#login").addEventListener("submit",e=>{e.preventDefault();const role=$(".role[aria-pressed=true]").dataset.role;
+  const names={Consejero:["Laura Rosero","CEAD Pasto","LR"],Coordinador:["Mauricio Pinto","Bienestar · Zona Sur","MP"],Analista:["Camila Ortiz","Analítica institucional","CO"]}[role];
+  user={role,name:names[0],area:names[1],ini:names[2]};store.set("user",user);location.hash="tablero";route()});
+$("#logout").onclick=()=>{user=null;store.set("user",null);location.hash="inicio";route()};
+function updateCount(){$("#nav-count").textContent=STUDENTS.filter(s=>level(s)==="alto"&&statusOf(s)==="Sin revisar").length}
+function route(){
+  const h=(location.hash||"").slice(1);
+  if(!user||h==="inicio"||!h&&!user){$("#v-inicio").hidden=false;$("#app").hidden=true;$("#test-fab").hidden=true;$("#test-panel").hidden=true;drawTopo();return}
+  $("#v-inicio").hidden=true;$("#app").hidden=false;$("#test-fab").hidden=false;
+  $("#u-name").textContent=user.name;$("#u-role").textContent=user.role+" · "+user.area;$("#u-ini").textContent=user.ini;updateCount();
+  const view=h.startsWith("caso-")?"casos":(["tablero","casos","seguimiento","datos","ayuda"].includes(h)?h:"tablero");
+  $$(".nav a").forEach(a=>{if(a.dataset.nav===view)a.setAttribute("aria-current","page");else a.removeAttribute("aria-current")});
+  if(h.startsWith("caso-"))vCaso(h.slice(5));else({tablero:vTablero,casos:vCasos,seguimiento:vSeguimiento,datos:vDatos,ayuda:vAyuda}[view])();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+
+/* Curvas de nivel decorativas del panel de ingreso (territorio rural) */
+function drawTopo(){const c=$("#topo");if(!c)return;const w=c.clientWidth,h=c.clientHeight;if(!w)return;const d=Math.min(2,window.devicePixelRatio||1);c.width=w*d;c.height=h*d;const x=c.getContext("2d");x.scale(d,d);x.strokeStyle="#FFFFFF";x.lineWidth=1;const r=rng(3);
+  for(let k=0;k<18;k++){const cx=w*(.3+r()*.6),cy=h*(.2+r()*.7);for(let j=1;j<6;j++){x.beginPath();const rad=j*18+k*3;for(let a=0;a<=Math.PI*2+.1;a+=.15){const n=1+.18*Math.sin(a*3+k)+.1*Math.cos(a*5+j);const px=cx+Math.cos(a)*rad*n*1.4,py=cy+Math.sin(a)*rad*n;a?x.lineTo(px,py):x.moveTo(px,py)}x.stroke()}}}
+window.addEventListener("resize",()=>{if(!$("#v-inicio").hidden)drawTopo()});
+route();
+})();
+</script>
+</html>
